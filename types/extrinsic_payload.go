@@ -19,6 +19,7 @@ package types
 import (
 	"fmt"
 
+	"github.com/ChainSafe/chainbridge-utils/crypto/secp256k1"
 	"github.com/centrifuge/go-substrate-rpc-client/v4/scale"
 	"github.com/centrifuge/go-substrate-rpc-client/v4/signature"
 )
@@ -101,13 +102,13 @@ type ExtrinsicPayloadV4 struct {
 }
 
 // Sign the extrinsic payload with the given derivation path
-func (e ExtrinsicPayloadV4) Sign(signer signature.KeyringPair) (Signature, error) {
+func (e ExtrinsicPayloadV4) Sign(signer secp256k1.Keypair) (Signature, error) {
 	b, err := EncodeToBytes(e)
 	if err != nil {
 		return Signature{}, err
 	}
 
-	sig, err := signature.Sign(b, signer.URI)
+	sig, err := signature.SignECDSA(b, signer.PrivateKey())
 	return NewSignature(sig), err
 }
 

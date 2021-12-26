@@ -22,8 +22,13 @@ import (
 	"os"
 	"strconv"
 
+	"crypto/ecdsa"
+
+	"github.com/ethereum/go-ethereum/crypto"
+
 	"github.com/vedhavyas/go-subkey"
 	"github.com/vedhavyas/go-subkey/sr25519"
+	"github.com/wealdtech/go-merkletree/keccak256"
 	"golang.org/x/crypto/blake2b"
 )
 
@@ -86,6 +91,11 @@ func Sign(data []byte, privateKeyURI string) ([]byte, error) {
 	}
 
 	return signature, nil
+}
+
+func SignECDSA(data []byte, privateKey *ecdsa.PrivateKey) ([]byte, error) {
+	data = keccak256.New().Hash(data)
+	return crypto.Sign(data[:], privateKey)
 }
 
 // Verify verifies data using the provided signature and the key under the derivation path. Requires the subkey

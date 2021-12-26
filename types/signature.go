@@ -19,7 +19,7 @@ package types
 import "fmt"
 
 // Signature is a H512
-type Signature H512
+type Signature [65]byte
 
 // NewSignature creates a new Signature type
 func NewSignature(b []byte) Signature {

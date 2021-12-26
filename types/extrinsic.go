@@ -19,13 +19,12 @@ package types
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"io"
 	"math/big"
 	"strings"
 
+	"github.com/ChainSafe/chainbridge-utils/crypto/secp256k1"
 	"github.com/centrifuge/go-substrate-rpc-client/v4/scale"
-	"github.com/centrifuge/go-substrate-rpc-client/v4/signature"
 )
 
 const (
@@ -47,7 +46,7 @@ type Extrinsic struct {
 	// Version is the encoded version flag (which encodes the raw transaction version and signing information in one byte)
 	Version byte
 	// Signature is the ExtrinsicSignatureV4, it's presence depends on the Version flag
-	Signature ExtrinsicSignatureV4
+	Signature ExtrinsicSignatureV3
 	// Method is the call this extrinsic wraps
 	Method Call
 }
@@ -120,11 +119,7 @@ func (e Extrinsic) Type() uint8 {
 }
 
 // Sign adds a signature to the extrinsic
-func (e *Extrinsic) Sign(signer signature.KeyringPair, o SignatureOptions) error {
-	if e.Type() != ExtrinsicVersion4 {
-		return fmt.Errorf("unsupported extrinsic version: %v (isSigned: %v, type: %v)", e.Version, e.IsSigned(), e.Type())
-	}
-
+func (e *Extrinsic) Sign(signer secp256k1.Keypair, o SignatureOptions) error {
 	mb, err := EncodeToBytes(e.Method)
 	if err != nil {
 		return err
@@ -147,17 +142,17 @@ func (e *Extrinsic) Sign(signer signature.KeyringPair, o SignatureOptions) error
 		},
 		TransactionVersion: o.TransactionVersion,
 	}
-
-	signerPubKey := NewMultiAddressFromAccountID(signer.PublicKey)
+	signerPubKey := NewAddressFromAccountID(signer.CommonAddress().Bytes())
 
 	sig, err := payload.Sign(signer)
 	if err != nil {
 		return err
 	}
 
-	extSig := ExtrinsicSignatureV4{
-		Signer:    signerPubKey,
-		Signature: MultiSignature{IsSr25519: true, AsSr25519: sig},
+	extSig := ExtrinsicSignatureV3{
+		Signer: signerPubKey,
+		// Signature: MultiSignature{IsEcdsa: true, AsEcdsa: NewBytes(sig)},
+		Signature: sig,
 		Era:       era,
 		Nonce:     o.Nonce,
 		Tip:       o.Tip,
@@ -186,11 +181,6 @@ func (e *Extrinsic) Decode(decoder scale.Decoder) error {
 
 	// signature
 	if e.IsSigned() {
-		if e.Type() != ExtrinsicVersion4 {
-			return fmt.Errorf("unsupported extrinsic version: %v (isSigned: %v, type: %v)", e.Version, e.IsSigned(),
-				e.Type())
-		}
-
 		err = decoder.Decode(&e.Signature)
 		if err != nil {
 			return err
@@ -207,10 +197,6 @@ func (e *Extrinsic) Decode(decoder scale.Decoder) error {
 }
 
 func (e Extrinsic) Encode(encoder scale.Encoder) error {
-	if e.Type() != ExtrinsicVersion4 {
-		return fmt.Errorf("unsupported extrinsic version: %v (isSigned: %v, type: %v)", e.Version, e.IsSigned(),
-			e.Type())
-	}
 
 	// create a temporary buffer that will receive the plain encoded transaction (version, signature (optional),
 	// method/call)

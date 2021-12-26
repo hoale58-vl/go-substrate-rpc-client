@@ -17,7 +17,7 @@
 package types
 
 // AccountID represents a public key (an 32 byte array)
-type AccountID [32]byte
+type AccountID [20]byte
 
 // NewAccountID creates a new AccountID type
 func NewAccountID(b []byte) AccountID {

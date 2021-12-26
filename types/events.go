@@ -74,6 +74,14 @@ type EventBalancesDeposit struct {
 	Topics  []Hash
 }
 
+// EventDeposit is emitted when an account send some free balance
+type EventBalancesWithdraw struct {
+	Phase   Phase
+	Who     AccountID
+	Balance U128
+	Topics  []Hash
+}
+
 // EventBalancesReserved is emitted when some balance was reserved (moved from free to reserved)
 type EventBalancesReserved struct {
 	Phase   Phase
