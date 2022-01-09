@@ -17,7 +17,7 @@
 package types
 
 type ExtrinsicSignatureV3 struct {
-	Signer    Address
+	Signer    AccountID
 	Signature Signature
 	Era       ExtrinsicEra // extra via system::CheckEra
 	Nonce     UCompact     // extra via system::CheckNonce (Compact<Index> where Index is u32))

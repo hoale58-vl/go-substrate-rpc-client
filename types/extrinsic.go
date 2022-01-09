@@ -142,7 +142,7 @@ func (e *Extrinsic) Sign(signer secp256k1.Keypair, o SignatureOptions) error {
 		},
 		TransactionVersion: o.TransactionVersion,
 	}
-	signerPubKey := NewAddressFromAccountID(signer.CommonAddress().Bytes())
+	signerPubKey := NewAccountID(signer.CommonAddress().Bytes())
 
 	sig, err := payload.Sign(signer)
 	if err != nil {
@@ -150,8 +150,7 @@ func (e *Extrinsic) Sign(signer secp256k1.Keypair, o SignatureOptions) error {
 	}
 
 	extSig := ExtrinsicSignatureV3{
-		Signer: signerPubKey,
-		// Signature: MultiSignature{IsEcdsa: true, AsEcdsa: NewBytes(sig)},
+		Signer:    signerPubKey,
 		Signature: sig,
 		Era:       era,
 		Nonce:     o.Nonce,
